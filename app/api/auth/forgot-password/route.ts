@@ -1,67 +1,76 @@
+import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
 
-export async function POST(request: Request) {
+import { prisma } from "@/lib/prisma";
+import { sendPasswordResetEmail } from "@/lib/email";
+
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const email = body.email?.trim().toLowerCase();
+    const email = String(body.email || "")
+      .trim()
+      .toLowerCase();
 
     if (!email) {
-      return Response.json(
+      return NextResponse.json(
         {
           success: false,
-          message: "Email is required",
+          error: "Email is required.",
         },
         { status: 400 }
       );
     }
 
-    console.log("FORGOT PASSWORD EMAIL:", email);
-
     const user = await prisma.user.findUnique({
       where: {
         email,
       },
-      include: {
-        role: true,
-      },
     });
 
-    // User not found
+    /*
+     * Do not reveal whether an account exists.
+     */
     if (!user) {
-      console.log("USER FOUND: false");
-
-      return Response.json(
-        {
-          success: false,
-          message: "User not found in database",
-          email,
-        },
-        { status: 404 }
-      );
+      return NextResponse.json({
+        success: true,
+        message:
+          "If an account exists for this email, a password reset link has been sent.",
+      });
     }
 
-    console.log("USER FOUND: true");
-    console.log("USER ROLE:", user.role.name);
-    console.log(
-      "PASSWORD CHANGE ALLOWED:",
-      user.passwordChangeAllowed
+    /*
+     * Accounts where password change is disabled
+     * cannot use forgot password.
+     *
+     * Owner accounts are configured this way.
+     */
+    if (!user.passwordChangeAllowed) {
+      return NextResponse.json({
+        success: true,
+        message:
+          "If an account exists for this email, a password reset link has been sent.",
+      });
+    }
+
+    /*
+     * Generate secure reset token.
+     */
+    const token = crypto
+      .randomBytes(32)
+      .toString("hex");
+
+    /*
+     * Token expires in 15 minutes.
+     */
+    const expiresAt = new Date(
+      Date.now() + 15 * 60 * 1000
     );
 
-    // Owner / locked account
-    if (!user.passwordChangeAllowed) {
-      return Response.json(
-        {
-          success: false,
-          message: "Password reset is not allowed for this account",
-          role: user.role.name,
-        },
-        { status: 403 }
-      );
-    }
-
-    // Delete old unused tokens
+    /*
+     * Remove previous unused tokens
+     * for this user.
+     */
     await prisma.passwordResetToken.deleteMany({
       where: {
         userId: user.id,
@@ -69,15 +78,9 @@ export async function POST(request: Request) {
       },
     });
 
-    // Generate token
-    const token = crypto.randomBytes(32).toString("hex");
-
-    // Token expires after 15 minutes
-    const expiresAt = new Date(
-      Date.now() + 15 * 60 * 1000
-    );
-
-    // Save token
+    /*
+     * Store new reset token.
+     */
     await prisma.passwordResetToken.create({
       data: {
         userId: user.id,
@@ -86,27 +89,69 @@ export async function POST(request: Request) {
       },
     });
 
-    // Testing reset URL
+    /*
+     * Production URL comes from APP_URL.
+     */
+    const appUrl =
+      process.env.APP_URL ||
+      "http://localhost:3000";
+
     const resetUrl =
-      `http://localhost:3000/reset-password?token=${token}`;
+      `${appUrl}/reset-password?token=${token}`;
 
-    console.log("RESET LINK GENERATED");
+    /*
+     * Send reset email.
+     */
+    try {
+      await sendPasswordResetEmail({
+        to: user.email,
+        name:
+          user.name ||
+          user.email.split("@")[0],
+        resetUrl,
+      });
+    } catch (emailError) {
+      console.error(
+        "PASSWORD RESET EMAIL ERROR:",
+        emailError
+      );
 
-    return Response.json({
+      /*
+       * Do not keep a reset token if
+       * email delivery failed.
+       */
+      await prisma.passwordResetToken.delete({
+        where: {
+          token,
+        },
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Unable to send password reset email. Please try again later.",
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
       success: true,
-      message: "Password reset link generated successfully",
-      email: user.email,
-      role: user.role.name,
-      resetUrl,
-      expiresAt,
+      message:
+        "Password reset link has been sent to your email.",
     });
   } catch (error) {
-    console.error("Forgot password error:", error);
+    console.error(
+      "FORGOT PASSWORD ERROR:",
+      error
+    );
 
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
-        message: "Something went wrong",
+        error:
+          "Something went wrong. Please try again.",
       },
       { status: 500 }
     );
