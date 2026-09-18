@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Permission {
+  READ_SELF_ATTENDANCE
+  READ_ALL_ATTENDANCE
+  CLOCK_IN_OUT
+  READ_SELF_VISIT
+  READ_ALL_VISIT
+  SAVE_VISIT
+  MANAGE_ROLES
+  PROVISION_USERS
+  MANAGE_USER_ACCOUNTS
+}
+
+model User {
+  id       String  @id @default(uuid())
+  name     String?
+  email    String  @unique
+  password String
+
+  passwordChangeAllowed Boolean @default(true)
+  mustChangePassword    Boolean @default(false)
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  customPermissions   UserPermission[]
+  attendance          Attendance[]
+  visits              Visit[]
+  passwordResetTokens PasswordResetToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roleId])
+}
+
+model Role {
+  id   String @id @default(uuid())
+  name String @unique
+
+  users       User[]
+  permissions RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RolePermission {
+  roleId     String
+  permission Permission
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permission])
+}
+
+model UserPermission {
+  userId     String
+  permission Permission
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permission])
+}
+
+model Attendance {
+  id     String @id @default(uuid())
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clockIn  DateTime
+  clockOut DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([clockIn])
+}
+
+model Visit {
+  id     String @id @default(uuid())
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  customerName String
+  purpose      String
+  outcome      String
+  location     String
+  visitDate    DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([visitDate])
+}
+
+model PasswordResetToken {
+  id     String @id @default(uuid())
+  userId String
+
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
