@@ -145,8 +145,7 @@ export default function UserManagementPage() {
           }
         );
 
-        const data =
-          await response.json();
+        const data = await response.json();
 
         if (
           response.ok &&
@@ -202,8 +201,7 @@ export default function UserManagementPage() {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           credentials: "include",
           body: JSON.stringify({
@@ -217,8 +215,7 @@ export default function UserManagementPage() {
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         setError(
@@ -235,8 +232,7 @@ export default function UserManagementPage() {
 
       if (data.credentials) {
         setCredentials({
-          email:
-            data.credentials.email,
+          email: data.credentials.email,
           temporaryPassword:
             data.credentials
               .temporaryPassword,
@@ -250,7 +246,7 @@ export default function UserManagementPage() {
        * Refresh users list
        */
       if (
-        currentUser.permissions.includes(
+        currentUser?.permissions?.includes(
           "MANAGE_USER_ACCOUNTS"
         )
       ) {
@@ -293,10 +289,11 @@ export default function UserManagementPage() {
     userId: string,
     userEmail: string
   ) {
-    const confirmed =
-      window.confirm(
-        `Are you sure you want to delete ${userEmail}?`
-      );
+    const confirmed = window.confirm(
+      "Are you sure you want to delete " +
+        userEmail +
+        "?"
+    );
 
     if (!confirmed) {
       return;
@@ -311,8 +308,7 @@ export default function UserManagementPage() {
         {
           method: "DELETE",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           credentials: "include",
           body: JSON.stringify({
@@ -321,8 +317,7 @@ export default function UserManagementPage() {
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         setError(
@@ -339,8 +334,7 @@ export default function UserManagementPage() {
 
       setUsers((currentUsers) =>
         currentUsers.filter(
-          (user) =>
-            user.id !== userId
+          (user) => user.id !== userId
         )
       );
     } catch (err) {
@@ -364,8 +358,11 @@ export default function UserManagementPage() {
     }
 
     const text =
-      `Login Email: ${credentials.email}\n` +
-      `Temporary Password: ${credentials.temporaryPassword}`;
+      "Login Email: " +
+      credentials.email +
+      "\n" +
+      "Temporary Password: " +
+      credentials.temporaryPassword;
 
     try {
       await navigator.clipboard.writeText(
@@ -489,26 +486,23 @@ export default function UserManagementPage() {
   /*
    * Roles
    */
-  const availableRoles =
-    isSuperAdmin
-      ? [
-          "Owner",
-          "Manager",
-          "Field Employee",
-        ]
-      : [
-          "Manager",
-          "Field Employee",
-        ];
+  const availableRoles = isSuperAdmin
+    ? [
+        "Owner",
+        "Manager",
+        "Field Employee",
+      ]
+    : [
+        "Manager",
+        "Field Employee",
+      ];
 
   return (
     <main className="min-h-screen bg-gray-50">
-
       {/* =========================
           MOBILE HEADER
       ========================== */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-
         <div className="h-16 px-4 flex items-center justify-between">
 
           <button
@@ -526,9 +520,7 @@ export default function UserManagementPage() {
             <button
               type="button"
               onClick={() =>
-                router.push(
-                  "/dashboard"
-                )
+                router.push("/dashboard")
               }
               className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -546,7 +538,6 @@ export default function UserManagementPage() {
           </div>
 
         </div>
-
       </div>
 
       <div className="flex min-h-screen">
@@ -578,9 +569,7 @@ export default function UserManagementPage() {
               <button
                 type="button"
                 onClick={() =>
-                  router.push(
-                    "/dashboard"
-                  )
+                  router.push("/dashboard")
                 }
                 className="w-full text-left px-3 py-2.5 rounded-md text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               >
@@ -649,15 +638,13 @@ export default function UserManagementPage() {
               )}
 
             </div>
-
           </nav>
 
           {/* User info */}
           <div className="border-t border-gray-200 p-4">
 
             <p className="text-sm font-medium text-gray-900 truncate">
-              {currentUser.name ||
-                "User"}
+              {currentUser.name || "User"}
             </p>
 
             <p className="text-xs text-gray-500 truncate mt-1">
@@ -677,7 +664,6 @@ export default function UserManagementPage() {
             </button>
 
           </div>
-
         </aside>
 
         {/* =========================
@@ -693,9 +679,7 @@ export default function UserManagementPage() {
               <button
                 type="button"
                 onClick={() =>
-                  router.push(
-                    "/dashboard"
-                  )
+                  router.push("/dashboard")
                 }
                 className="text-sm text-gray-500 hover:text-gray-900 mb-3"
               >
@@ -705,7 +689,6 @@ export default function UserManagementPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
                 <div>
-
                   <h2 className="text-xl font-semibold text-gray-900">
                     User Management
                   </h2>
@@ -714,7 +697,6 @@ export default function UserManagementPage() {
                     Create user accounts and provide
                     access credentials.
                   </p>
-
                 </div>
 
                 <div className="text-sm text-gray-500">
@@ -725,9 +707,7 @@ export default function UserManagementPage() {
                 </div>
 
               </div>
-
             </div>
-
           </header>
 
           {/* Content */}
@@ -768,7 +748,6 @@ export default function UserManagementPage() {
                         : "border-gray-200 hover:bg-gray-50"
                     }`}
                   >
-
                     <p className="text-sm font-semibold text-gray-900">
                       Send Credentials by Email
                     </p>
@@ -778,7 +757,6 @@ export default function UserManagementPage() {
                       A temporary password will be
                       generated and sent using SMTP.
                     </p>
-
                   </button>
 
                   {/* Manual Mode */}
@@ -786,9 +764,7 @@ export default function UserManagementPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        changeMode(
-                          "manual"
-                        )
+                        changeMode("manual")
                       }
                       className={`border rounded-md p-4 text-left transition ${
                         mode === "manual"
@@ -796,7 +772,6 @@ export default function UserManagementPage() {
                           : "border-gray-200 hover:bg-gray-50"
                       }`}
                     >
-
                       <p className="text-sm font-semibold text-gray-900">
                         Generate Credentials
                       </p>
@@ -806,18 +781,13 @@ export default function UserManagementPage() {
                         and temporary password for
                         you to give directly to the user.
                       </p>
-
                     </button>
                   )}
 
                 </div>
 
                 {/* Form */}
-                <form
-                  onSubmit={
-                    handleCreateUser
-                  }
-                >
+                <form onSubmit={handleCreateUser}>
 
                   {/* Email */}
                   {mode === "email" && (
@@ -869,7 +839,6 @@ export default function UserManagementPage() {
                       }
                       className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 bg-white outline-none focus:border-blue-500"
                     >
-
                       <option value="">
                         Select a role
                       </option>
@@ -884,7 +853,6 @@ export default function UserManagementPage() {
                           </option>
                         )
                       )}
-
                     </select>
 
                   </div>
@@ -970,7 +938,6 @@ export default function UserManagementPage() {
                     <div className="p-5 space-y-5">
 
                       <div>
-
                         <p className="text-xs text-gray-500">
                           Login Email
                         </p>
@@ -978,11 +945,9 @@ export default function UserManagementPage() {
                         <p className="text-sm font-medium text-gray-900 mt-1 break-all">
                           {credentials.email}
                         </p>
-
                       </div>
 
                       <div>
-
                         <p className="text-xs text-gray-500">
                           Temporary Password
                         </p>
@@ -990,7 +955,6 @@ export default function UserManagementPage() {
                         <p className="text-sm font-medium text-gray-900 mt-1 break-all font-mono">
                           {credentials.temporaryPassword}
                         </p>
-
                       </div>
 
                       <button
@@ -1004,12 +968,10 @@ export default function UserManagementPage() {
                       </button>
 
                     </div>
-
                   </div>
                 )}
 
               </div>
-
             </section>
 
             {/* =========================
@@ -1047,7 +1009,6 @@ export default function UserManagementPage() {
                       <thead className="bg-gray-50 border-b border-gray-200">
 
                         <tr>
-
                           <th className="text-left px-5 py-3 font-medium text-gray-600">
                             Name
                           </th>
@@ -1067,78 +1028,72 @@ export default function UserManagementPage() {
                           <th className="text-left px-5 py-3 font-medium text-gray-600">
                             Action
                           </th>
-
                         </tr>
 
                       </thead>
 
                       <tbody className="divide-y divide-gray-100">
 
-                        {users.map(
-                          (user) => (
-                            <tr
-                              key={user.id}
-                              className="hover:bg-gray-50"
-                            >
+                        {users.map((user) => (
+                          <tr
+                            key={user.id}
+                            className="hover:bg-gray-50"
+                          >
 
-                              <td className="px-5 py-4 text-gray-900">
-                                {user.name ||
-                                  "—"}
-                              </td>
+                            <td className="px-5 py-4 text-gray-900">
+                              {user.name || "—"}
+                            </td>
 
-                              <td className="px-5 py-4 text-gray-700">
+                            <td className="px-5 py-4 text-gray-700">
+                              <div className="max-w-xs break-all">
+                                {user.email}
+                              </div>
+                            </td>
 
-                                <div className="max-w-xs break-all">
-                                  {user.email}
-                                </div>
+                            <td className="px-5 py-4 text-gray-900">
+                              {user.role}
+                            </td>
 
-                              </td>
+                            <td className="px-5 py-4">
 
-                              <td className="px-5 py-4 text-gray-900">
-                                {user.role}
-                              </td>
+                              {user.mustChangePassword ? (
+                                <span className="text-amber-700">
+                                  Temporary
+                                </span>
+                              ) : (
+                                <span className="text-green-700">
+                                  Changed
+                                </span>
+                              )}
 
-                              <td className="px-5 py-4">
+                            </td>
 
-                                {user.mustChangePassword ? (
-                                  <span className="text-amber-700">
-                                    Temporary
-                                  </span>
-                                ) : (
-                                  <span className="text-green-700">
-                                    Changed
-                                  </span>
-                                )}
+                            <td className="px-5 py-4">
 
-                              </td>
+                              {user.id ===
+                              currentUser.id ? (
+                                <span className="text-xs text-gray-400">
+                                  Current account
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDeleteUser(
+                                      user.id,
+                                      user.email
+                                    )
+                                  }
+                                  className="text-sm text-red-600 hover:text-red-800"
+                                >
+                                  Delete
+                                </button>
+                              )}
 
-                              <td className="px-5 py-4">
+                            </td>
 
-                                {user.id ===
-                                currentUser.id ? (
-                                  <span className="text-xs text-gray-400">
-                                    Current account
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleDeleteUser(
-                                        user.id,
-                                        user.email
-                                      )
-                                    }
-                                    className="text-sm text-red-600 hover:text-red-800"
-                                  >
-                                    Delete
-                                  </button>
-                                )}
-
-                              </td>
-
-                            </tr>
-                          )
-                        )}
+                          </tr>
+                        ))}
 
                       </tbody>
 
@@ -1151,9 +1106,7 @@ export default function UserManagementPage() {
             )}
 
           </div>
-
         </section>
-
       </div>
     </main>
   );
