@@ -11,7 +11,9 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+  async function handleLogin(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     setLoading(true);
@@ -45,7 +47,6 @@ export default function HomePage() {
       }, 500);
     } catch (error) {
       console.error("Login error:", error);
-
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -59,7 +60,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -72,8 +73,11 @@ export default function HomePage() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-5">
-          
+        <form
+          onSubmit={handleLogin}
+          className="space-y-5"
+        >
+
           {/* Email */}
           <div>
             <label
@@ -88,19 +92,23 @@ export default function HomePage() {
               name="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
               placeholder="Enter your email"
-              autoComplete="off"
+              autoComplete="email"
               autoCorrect="off"
+              autoCapitalize="none"
               spellCheck={false}
               required
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 bg-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 bg-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Password */}
           <div>
             <div className="flex items-center justify-between mb-2">
+
               <label
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700"
@@ -114,6 +122,7 @@ export default function HomePage() {
               >
                 Forgot Password?
               </Link>
+
             </div>
 
             <input
@@ -121,22 +130,24 @@ export default function HomePage() {
               name="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) =>
+                setPassword(event.target.value)
+              }
               placeholder="Enter your password"
-              autoComplete="new-password"
+              autoComplete="current-password"
               required
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 bg-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 bg-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Error Message */}
+          {/* Error */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          {/* Success Message */}
+          {/* Success */}
           {success && (
             <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
               {success}

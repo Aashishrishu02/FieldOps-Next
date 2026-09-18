@@ -1,233 +1,543 @@
-import { Permission } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/current-user";
-import { hasPermission } from "@/lib/permissions";
 import { hashPassword } from "@/lib/password";
+import { sendUserCredentialsEmail } from "@/lib/email";
 
-export async function POST(request: Request) {
+type CreateUserMode = "email" | "manual";
+
+function generateTemporaryPassword(length = 14) {
+  const characters =
+    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#$%";
+
+  let password = "";
+
+  while (password.length < length) {
+    const index = crypto.randomInt(0, characters.length);
+    password += characters[index];
+  }
+
+  return password;
+}
+
+function generateLoginEmail(roleName: string) {
+  const rolePrefix = roleName
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+
+  const randomPart = crypto
+    .randomBytes(4)
+    .toString("hex")
+    .toUpperCase();
+
+  return `${rolePrefix}_${randomPart}@fieldops.local`;
+}
+
+/*
+ * GET /api/users
+ *
+ * Only Super Admin can see the complete user list.
+ */
+export async function GET() {
   try {
-    // 1. Current logged-in user
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-      return Response.json(
+      return NextResponse.json(
         {
           success: false,
-          message: "Not authenticated",
+          error: "Unauthorized",
         },
         { status: 401 }
       );
     }
 
-    // 2. Permission check
     if (
-      !hasPermission(
-        currentUser.permissions,
-        Permission.PROVISION_USERS
+      !currentUser.permissions.includes(
+        "MANAGE_USER_ACCOUNTS"
       )
     ) {
-      return Response.json(
+      return NextResponse.json(
         {
           success: false,
-          message: "You do not have permission to create users",
+          error:
+            "You do not have permission to view users.",
         },
         { status: 403 }
       );
     }
 
-    // 3. Request body
-    const body = await request.json();
-
-    const { name, role } = body;
-
-    if (!name || !role) {
-      return Response.json(
-        {
-          success: false,
-          message: "Name and role are required",
-        },
-        { status: 400 }
-      );
-    }
-
-    // 4. Find requested role
-    const requestedRole = await prisma.role.findUnique({
-      where: {
-        name: role,
+    const users = await prisma.user.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        role: true,
       },
     });
 
-    if (!requestedRole) {
-      return Response.json(
-        {
-          success: false,
-          message: "Invalid role",
-        },
-        { status: 400 }
-      );
-    }
+    const safeUsers = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role.name,
+      mustChangePassword: user.mustChangePassword,
+      passwordChangeAllowed:
+        user.passwordChangeAllowed,
+      createdAt: user.createdAt,
+    }));
 
-    // 5. Owner cannot create another Owner
-    if (
-      currentUser.role === "Owner" &&
-      requestedRole.name === "Owner"
-    ) {
-      return Response.json(
-        {
-          success: false,
-          message: "Owner cannot create another Owner",
-        },
-        { status: 403 }
-      );
-    }
-
-    // 6. Allowed roles
-    const allowedRoles = [
-      "Owner",
-      "Manager",
-      "Field Employee",
-    ];
-
-    if (!allowedRoles.includes(requestedRole.name)) {
-      return Response.json(
-        {
-          success: false,
-          message: "This role cannot be created",
-        },
-        { status: 400 }
-      );
-    }
-
-    // 7. Generate random email
-    const randomString = crypto
-      .randomUUID()
-      .replace(/-/g, "")
-      .slice(0, 8);
-
-    const generatedEmail =
-      `${name.toLowerCase().replace(/\s+/g, "")}.${randomString}@fieldops.test`;
-
-    // 8. Generate random password
-    const temporaryPassword = crypto
-      .randomUUID()
-      .replace(/-/g, "")
-      .slice(0, 14);
-
-    // 9. Hash password
-    const hashedPassword = await hashPassword(
-      temporaryPassword
-    );
-
-    // 10. Create user
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email: generatedEmail,
-        password: hashedPassword,
-        roleId: requestedRole.id,
-      },
+    return NextResponse.json({
+      success: true,
+      users: safeUsers,
     });
-
-    // 11. Return generated credentials
-    return Response.json(
-      {
-        success: true,
-        message: "User created successfully",
-
-        credentials: {
-          email: generatedEmail,
-          password: temporaryPassword,
-        },
-
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: requestedRole.name,
-        },
-      },
-      { status: 201 }
-    );
   } catch (error) {
-    console.error("Create user error:", error);
+    console.error("GET USERS ERROR:", error);
 
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
-        message: "Something went wrong",
+        error: "Failed to fetch users.",
       },
       { status: 500 }
     );
   }
 }
 
-export async function GET() {
+/*
+ * POST /api/users
+ *
+ * Email mode:
+ *   Real email + role
+ *   -> temporary password generated
+ *   -> credentials sent through SMTP
+ *
+ * Manual mode:
+ *   Super Admin selects role
+ *   -> login ID generated
+ *   -> temporary password generated
+ *   -> credentials returned on screen
+ */
+export async function POST(request: NextRequest) {
   try {
-    // 1. Get logged-in user
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-      return Response.json(
+      return NextResponse.json(
         {
           success: false,
-          message: "Not authenticated",
+          error: "Unauthorized",
         },
         { status: 401 }
       );
     }
 
-    // 2. Check permission
-    if (
-      !hasPermission(
-        currentUser.permissions,
-        Permission.MANAGE_USER_ACCOUNTS
-      )
-    ) {
-      return Response.json(
+    const canProvision =
+      currentUser.permissions.includes(
+        "PROVISION_USERS"
+      ) ||
+      currentUser.permissions.includes(
+        "MANAGE_USER_ACCOUNTS"
+      );
+
+    if (!canProvision) {
+      return NextResponse.json(
         {
           success: false,
-          message:
-            "You do not have permission to manage user accounts",
+          error:
+            "You do not have permission to create users.",
         },
         { status: 403 }
       );
     }
 
-    // 3. Get all users
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        updatedAt: true,
+    const body = await request.json();
 
-        role: {
-          select: {
-            id: true,
-            name: true,
+    const mode: CreateUserMode =
+      body.mode === "manual" ? "manual" : "email";
+
+    const requestedEmail = String(
+      body.email || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    const roleName = String(
+      body.role || ""
+    ).trim();
+
+    if (!roleName) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Role is required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const isSuperAdmin =
+      currentUser.permissions.includes(
+        "MANAGE_USER_ACCOUNTS"
+      );
+
+    /*
+     * Super Admin:
+     * Owner / Manager / Field Employee
+     *
+     * Owner:
+     * Manager / Field Employee
+     */
+    const allowedRoles = isSuperAdmin
+      ? ["Owner", "Manager", "Field Employee"]
+      : ["Manager", "Field Employee"];
+
+    if (!allowedRoles.includes(roleName)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid role selected.",
+        },
+        { status: 400 }
+      );
+    }
+
+    /*
+     * Manual credentials are only available
+     * to Super Admin.
+     */
+    if (mode === "manual" && !isSuperAdmin) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Only Super Admin can generate manual credentials.",
+        },
+        { status: 403 }
+      );
+    }
+
+    /*
+     * Find selected role.
+     */
+    const role = await prisma.role.findUnique({
+      where: {
+        name: roleName,
+      },
+    });
+
+    if (!role) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Selected role does not exist.",
+        },
+        { status: 400 }
+      );
+    }
+
+    /*
+     * Determine login email.
+     */
+    let loginEmail = requestedEmail;
+
+    /*
+     * Email mode requires a real email.
+     */
+    if (mode === "email") {
+      if (!loginEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Email is required when using email delivery.",
           },
+          { status: 400 }
+        );
+      }
+
+      const emailRegex =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRegex.test(loginEmail)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Please enter a valid email address.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    /*
+     * Manual mode generates a login ID.
+     */
+    if (mode === "manual") {
+      loginEmail = generateLoginEmail(roleName);
+    }
+
+    /*
+     * Prevent duplicate account.
+     */
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email: loginEmail,
+      },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "A user with this email/login ID already exists.",
+        },
+        { status: 409 }
+      );
+    }
+
+    /*
+     * Generate temporary password.
+     */
+    const temporaryPassword =
+      generateTemporaryPassword();
+
+    const hashedPassword =
+      await hashPassword(temporaryPassword);
+
+    /*
+     * Initial name.
+     */
+    const initialName =
+      mode === "manual"
+        ? `${roleName} User`
+        : loginEmail.split("@")[0];
+
+    /*
+     * Create user.
+     */
+    const newUser = await prisma.user.create({
+      data: {
+        name: initialName,
+        email: loginEmail,
+        password: hashedPassword,
+        roleId: role.id,
+        passwordChangeAllowed: true,
+        mustChangePassword: true,
+      },
+      include: {
+        role: true,
+      },
+    });
+
+    /*
+     * EMAIL MODE
+     */
+    if (mode === "email") {
+      try {
+        await sendUserCredentialsEmail({
+          to: loginEmail,
+          name: initialName,
+          email: loginEmail,
+          temporaryPassword,
+          role: role.name,
+        });
+      } catch (emailError) {
+        console.error(
+          "CREDENTIAL EMAIL ERROR:",
+          emailError
+        );
+
+        /*
+         * Remove the account if email delivery failed.
+         */
+        await prisma.user.delete({
+          where: {
+            id: newUser.id,
+          },
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "User was not created because the credential email could not be sent. Please check SMTP configuration.",
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          success: true,
+          message:
+            "User created successfully and credentials were sent by email.",
+
+          user: {
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role.name,
+          },
+
+          /*
+           * Useful during local development.
+           * Not returned in production.
+           */
+          ...(process.env.NODE_ENV !== "production"
+            ? {
+                credentials: {
+                  email: loginEmail,
+                  temporaryPassword,
+                },
+              }
+            : {}),
+        },
+        { status: 201 }
+      );
+    }
+
+    /*
+     * MANUAL MODE
+     */
+    return NextResponse.json(
+      {
+        success: true,
+        message:
+          "Credentials generated successfully.",
+
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role.name,
+        },
+
+        credentials: {
+          email: loginEmail,
+          temporaryPassword,
         },
       },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("CREATE USER ERROR:", error);
 
-      orderBy: {
-        createdAt: "desc",
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to create user.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/*
+ * DELETE /api/users
+ *
+ * Only Super Admin can delete users.
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 }
+      );
+    }
+
+    const isSuperAdmin =
+      currentUser.permissions.includes(
+        "MANAGE_USER_ACCOUNTS"
+      );
+
+    if (!isSuperAdmin) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Only Super Admin can delete users.",
+        },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+
+    const userId = String(
+      body.userId || ""
+    ).trim();
+
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User ID is required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    /*
+     * Super Admin cannot delete himself.
+     */
+    if (userId === currentUser.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "You cannot delete your own account.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      include: {
+        role: true,
       },
     });
 
-    // 4. Return users
-    return Response.json({
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    await prisma.user.delete({
+      where: {
+        id: userId,
+      },
+    });
+
+    return NextResponse.json({
       success: true,
-      count: users.length,
-      users,
+      message: `${user.email} has been deleted successfully.`,
     });
   } catch (error) {
-    console.error("Get users error:", error);
+    console.error("DELETE USER ERROR:", error);
 
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
-        message: "Something went wrong",
+        error: "Failed to delete user.",
       },
       { status: 500 }
     );
