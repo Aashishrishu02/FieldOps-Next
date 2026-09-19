@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -23,13 +24,17 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const initialLoadDone = useRef(false);
+
   const loadUser = useCallback(async () => {
     try {
       setError("");
+
       const response = await fetch("/api/auth/me", {
         method: "GET",
         credentials: "include",
@@ -56,6 +61,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   useEffect(() => {
+    if (initialLoadDone.current) {
+      return;
+    }
+
+    initialLoadDone.current = true;
     void loadUser();
   }, [loadUser]);
 
@@ -90,8 +100,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
 export function useUser(): UserContextType {
   const context = useContext(UserContext);
+
   if (!context) {
     throw new Error("useUser must be used within a UserProvider");
   }
+
   return context;
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useUser } from "../context/UserContext";
 import { Header } from "../components/Header";
+import { FormCardSkeleton, TableSkeleton } from "../components/DashboardSkeleton";
 import { formatDate, formatDateTime, getDuration } from "@/lib/utils";
 
 type AttendanceRecord = {
@@ -117,9 +118,17 @@ export default function AttendancePage() {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-sm text-gray-600">
-        Loading attendance...
-      </div>
+      <section className="min-w-0">
+        <Header
+          title="Attendance"
+          subtitle="Manage attendance and view attendance records."
+          backHref="/dashboard"
+        />
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+          <FormCardSkeleton />
+          <TableSkeleton rows={4} />
+        </div>
+      </section>
     );
   }
 

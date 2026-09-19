@@ -410,8 +410,18 @@ export default function UserManagementPage() {
             </div>
 
             {loadingUsers ? (
-              <div className="p-6 text-center text-xs sm:text-sm text-gray-500">
-                Loading users...
+              <div className="p-4 sm:p-5 space-y-3 animate-pulse">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-10 bg-gray-50 rounded w-full flex items-center px-4 gap-4"
+                  >
+                    <div className="h-3 w-1/4 bg-gray-200 rounded" />
+                    <div className="h-3 w-1/4 bg-gray-100 rounded" />
+                    <div className="h-3 w-1/4 bg-gray-100 rounded" />
+                    <div className="h-3 w-1/4 bg-gray-200 rounded" />
+                  </div>
+                ))}
               </div>
             ) : users.length === 0 ? (
               <div className="p-6 text-center text-xs sm:text-sm text-gray-500">

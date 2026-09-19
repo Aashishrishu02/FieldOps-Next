@@ -3,9 +3,19 @@ import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 
 export async function GET() {
+  const start = performance.now();
+
   try {
+    const cookieStart = performance.now();
+
     const cookieStore = await cookies();
     const token = cookieStore.get("auth_token")?.value;
+
+    console.log(
+      "[/api/auth/me] cookies:",
+      Math.round(performance.now() - cookieStart),
+      "ms"
+    );
 
     if (!token) {
       return Response.json(
@@ -17,7 +27,17 @@ export async function GET() {
       );
     }
 
+    const jwtStart = performance.now();
+
     const { userId } = await verifyToken(token);
+
+    console.log(
+      "[/api/auth/me] jwt:",
+      Math.round(performance.now() - jwtStart),
+      "ms"
+    );
+
+    const dbStart = performance.now();
 
     const user = await prisma.user.findUnique({
       where: {
@@ -33,6 +53,12 @@ export async function GET() {
       },
     });
 
+    console.log(
+      "[/api/auth/me] database:",
+      Math.round(performance.now() - dbStart),
+      "ms"
+    );
+
     if (!user) {
       return Response.json(
         {
@@ -44,13 +70,15 @@ export async function GET() {
     }
 
     const permissions = [
-      ...user.role.permissions.map(
-        (item) => item.permission
-      ),
-      ...user.customPermissions.map(
-        (item) => item.permission
-      ),
+      ...user.role.permissions.map((item) => item.permission),
+      ...user.customPermissions.map((item) => item.permission),
     ];
+
+    console.log(
+      "[/api/auth/me] total:",
+      Math.round(performance.now() - start),
+      "ms"
+    );
 
     return Response.json({
       success: true,
@@ -64,6 +92,12 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Auth check error:", error);
+
+    console.log(
+      "[/api/auth/me] failed after:",
+      Math.round(performance.now() - start),
+      "ms"
+    );
 
     return Response.json(
       {

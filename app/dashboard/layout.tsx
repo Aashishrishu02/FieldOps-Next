@@ -4,23 +4,13 @@ import { ReactNode } from "react";
 import { UserProvider, useUser } from "./context/UserContext";
 import { Sidebar } from "./components/Sidebar";
 import { MobileNav } from "./components/MobileNav";
+import { FullDashboardLayoutSkeleton } from "./components/DashboardSkeleton";
 
 function DashboardShell({ children }: { children: ReactNode }) {
   const { user, loading, error } = useUser();
 
   if (loading) {
-    return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="text-base font-medium text-gray-900">
-            Loading dashboard...
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            Checking your account access.
-          </p>
-        </div>
-      </main>
-    );
+    return <FullDashboardLayoutSkeleton />;
   }
 
   if (error && !user) {

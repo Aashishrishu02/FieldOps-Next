@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import { Header } from "../components/Header";
@@ -40,11 +45,17 @@ export default function RolesPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
+  // Prevent duplicate initial API call in React Strict Mode
+  const rolesLoadStarted = useRef(false);
+
   const loadRoles = useCallback(async () => {
     try {
+      setError("");
+
       const response = await fetch("/api/roles", {
         credentials: "include",
       });
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -53,11 +64,14 @@ export default function RolesPage() {
       }
 
       const loadedRoles: Role[] = data.roles || [];
+
       setRoles(loadedRoles);
 
       if (loadedRoles.length > 0) {
         const firstRole = loadedRoles[0];
+
         setSelectedRole(firstRole);
+
         setSelectedPermissions(
           firstRole.permissions.map((item) => item.permission)
         );
@@ -80,12 +94,20 @@ export default function RolesPage() {
       return;
     }
 
+    if (rolesLoadStarted.current) {
+      return;
+    }
+
+    rolesLoadStarted.current = true;
+
     void loadRoles();
   }, [user, router, loadRoles]);
 
   function handleRoleSelect(role: Role) {
     setSelectedRole(role);
-    setSelectedPermissions(role.permissions.map((item) => item.permission));
+    setSelectedPermissions(
+      role.permissions.map((item) => item.permission)
+    );
     setError("");
     setMessage("");
   }
@@ -95,6 +117,7 @@ export default function RolesPage() {
       if (current.includes(permission)) {
         return current.filter((item) => item !== permission);
       }
+
       return [...current, permission];
     });
   }
@@ -128,21 +151,28 @@ export default function RolesPage() {
         return;
       }
 
-      const updatedPermissions: RolePermission[] = selectedPermissions.map(
-        (permission) => ({ permission })
-      );
+      const updatedPermissions: RolePermission[] =
+        selectedPermissions.map((permission) => ({
+          permission,
+        }));
 
       setRoles((currentRoles) =>
         currentRoles.map((role) =>
           role.id === selectedRole.id
-            ? { ...role, permissions: updatedPermissions }
+            ? {
+                ...role,
+                permissions: updatedPermissions,
+              }
             : role
         )
       );
 
       setSelectedRole((currentRole) =>
         currentRole
-          ? { ...currentRole, permissions: updatedPermissions }
+          ? {
+              ...currentRole,
+              permissions: updatedPermissions,
+            }
           : null
       );
 
@@ -157,9 +187,41 @@ export default function RolesPage() {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-sm text-gray-600">
-        Loading roles...
-      </div>
+      <section className="min-w-0">
+        <Header
+          title="Role Management"
+          subtitle="Manage permissions assigned to roles."
+          backHref="/dashboard"
+        />
+
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-pulse">
+            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3">
+              <div className="h-4 w-20 bg-gray-200 rounded mb-4" />
+
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 bg-gray-100 rounded-md w-full"
+                />
+              ))}
+            </div>
+
+            <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
+              <div className="h-4 w-40 bg-gray-200 rounded mb-4" />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-16 border border-gray-100 rounded-md p-3 bg-gray-50"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -175,7 +237,7 @@ export default function RolesPage() {
         backHref="/dashboard"
       />
 
-      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {error && (
           <div className="border border-red-200 bg-red-50 text-red-700 rounded-lg px-4 py-3 text-xs sm:text-sm">
             {error}
@@ -189,10 +251,14 @@ export default function RolesPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 sm:px-5 py-3.5 border-b border-gray-200">
-              <h2 className="text-sm font-semibold text-gray-900">Roles</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
+          {/* Roles */}
+          <section className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="px-4 sm:px-5 py-4 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-900">
+                Roles
+              </h2>
+
+              <p className="text-xs text-gray-500 mt-1">
                 Select a role to manage its permissions.
               </p>
             </div>
@@ -221,14 +287,16 @@ export default function RolesPage() {
             </div>
           </section>
 
-          <section className="lg:col-span-2 bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+          {/* Permissions */}
+          <section className="lg:col-span-2 bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="px-4 sm:px-5 py-4 border-b border-gray-200">
               <h2 className="text-sm font-semibold text-gray-900">
                 {selectedRole
                   ? `${selectedRole.name} Permissions`
                   : "Permissions"}
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
+
+              <p className="text-xs text-gray-500 mt-1">
                 Select the permissions for this role.
               </p>
             </div>
@@ -242,7 +310,8 @@ export default function RolesPage() {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                     {allPermissions.map((permission) => {
-                      const checked = selectedPermissions.includes(permission);
+                      const checked =
+                        selectedPermissions.includes(permission);
 
                       return (
                         <label
@@ -260,6 +329,7 @@ export default function RolesPage() {
                             <p className="text-xs sm:text-sm font-medium text-gray-900">
                               {permissionLabels[permission] || permission}
                             </p>
+
                             <p className="text-xs text-gray-500 mt-0.5 break-all">
                               {permission}
                             </p>
