@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -139,15 +140,12 @@ export default function ForgotPasswordPage() {
               : "Generate Reset Link"}
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              window.location.href = "/";
-            }}
-            className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50"
+          <Link
+            href="/"
+            className="block text-center w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50"
           >
             Back to Login
-          </button>
+          </Link>
         </form>
       </div>
     </main>

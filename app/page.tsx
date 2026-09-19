@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 export default function HomePage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -43,7 +45,7 @@ export default function HomePage() {
       setSuccess("Login successful!");
 
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       }, 500);
     } catch (error) {
       console.error("Login error:", error);
@@ -54,6 +56,7 @@ export default function HomePage() {
   }
 
   function handleGoogleLogin() {
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/api/auth/google";
   }
 
