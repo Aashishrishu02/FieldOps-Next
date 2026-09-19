@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
 import { useUser } from "../context/UserContext";
+import { Header } from "../components/Header";
 import { formatDate, formatDateTime, getDuration } from "@/lib/utils";
 
 type AttendanceRecord = {
@@ -138,55 +138,43 @@ export default function AttendancePage() {
 
   return (
     <section className="min-w-0">
-      <header className="bg-white border-b border-gray-200">
-        <div className="px-5 sm:px-8 py-5 flex items-start gap-4">
-          <Link
-            href="/dashboard"
-            className="mt-1 text-sm text-gray-600 hover:text-gray-900 whitespace-nowrap"
-          >
-            ← Dashboard
-          </Link>
+      <Header
+        title="Attendance"
+        subtitle="Manage attendance and view attendance records."
+        backHref="/dashboard"
+      />
 
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Attendance</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Manage attendance and view attendance records.
-            </p>
-          </div>
-        </div>
-      </header>
-
-      <div className="px-5 sm:px-8 py-7">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         {error && (
-          <div className="mb-5 border border-red-200 bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">
+          <div className="border border-red-200 bg-red-50 text-red-700 rounded-lg px-4 py-3 text-xs sm:text-sm">
             {error}
           </div>
         )}
 
         {message && (
-          <div className="mb-5 border border-green-200 bg-green-50 text-green-700 rounded-lg px-4 py-3 text-sm">
+          <div className="border border-green-200 bg-green-50 text-green-700 rounded-lg px-4 py-3 text-xs sm:text-sm">
             {message}
           </div>
         )}
 
-        <section className="bg-white border border-gray-200 rounded-lg mb-6">
-          <div className="px-5 py-4 border-b border-gray-200">
-            <h3 className="text-base font-semibold text-gray-900">
+        <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-900">
               Attendance Actions
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
               Record your current attendance status.
             </p>
           </div>
 
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             {canClockInOut ? (
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                 <button
                   type="button"
                   onClick={handleClockIn}
                   disabled={actionLoading || hasOpenAttendance}
-                  className="px-4 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+                  className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md text-xs sm:text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                 >
                   {actionLoading ? "Processing..." : "Clock In"}
                 </button>
@@ -195,20 +183,28 @@ export default function AttendancePage() {
                   type="button"
                   onClick={handleClockOut}
                   disabled={actionLoading || !hasOpenAttendance}
-                  className="px-4 py-2.5 bg-gray-800 text-white rounded-md text-sm font-medium hover:bg-gray-900 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-800 text-white rounded-md text-xs sm:text-sm font-medium hover:bg-gray-900 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                 >
                   {actionLoading ? "Processing..." : "Clock Out"}
                 </button>
               </div>
             ) : (
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 You do not have permission to clock in or clock out.
               </p>
             )}
 
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <span className="text-sm text-gray-600">Current Status: </span>
-              <span className="text-sm font-medium text-gray-900">
+            <div className="mt-3.5 pt-3.5 border-t border-gray-100 flex items-center gap-2">
+              <span className="text-xs sm:text-sm text-gray-600">
+                Current Status:
+              </span>
+              <span
+                className={`text-xs sm:text-sm font-medium px-2 py-0.5 rounded ${
+                  hasOpenAttendance
+                    ? "bg-blue-50 text-blue-700"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
                 {hasOpenAttendance ? "Clocked In" : "Not Clocked In"}
               </span>
             </div>
@@ -216,11 +212,11 @@ export default function AttendancePage() {
         </section>
 
         <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-200">
-            <h3 className="text-base font-semibold text-gray-900">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-900">
               Attendance Records
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
               {canReadAll
                 ? "Attendance records for all users."
                 : canReadSelf
@@ -231,69 +227,69 @@ export default function AttendancePage() {
 
           {hasAttendanceAccess ? (
             records.length === 0 ? (
-              <div className="px-5 py-8">
+              <div className="px-5 py-8 text-center">
                 <p className="text-sm font-medium text-gray-700">
                   No attendance records found.
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Your attendance records will appear here.
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[600px] text-xs sm:text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       {canReadAll && (
-                        <th className="px-5 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+                        <th className="px-4 py-2.5 text-left font-medium text-gray-600 whitespace-nowrap">
                           User
                         </th>
                       )}
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+                      <th className="px-4 py-2.5 text-left font-medium text-gray-600 whitespace-nowrap">
                         Date
                       </th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+                      <th className="px-4 py-2.5 text-left font-medium text-gray-600 whitespace-nowrap">
                         Clock In
                       </th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+                      <th className="px-4 py-2.5 text-left font-medium text-gray-600 whitespace-nowrap">
                         Clock Out
                       </th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+                      <th className="px-4 py-2.5 text-left font-medium text-gray-600 whitespace-nowrap">
                         Duration
                       </th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+                      <th className="px-4 py-2.5 text-left font-medium text-gray-600 whitespace-nowrap">
                         Status
                       </th>
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-100">
                     {records.map((record) => (
                       <tr key={record.id} className="hover:bg-gray-50">
                         {canReadAll && (
-                          <td className="px-5 py-4">
-                            <p className="text-sm font-medium text-gray-900">
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-gray-900">
                               {record.user?.name || "Unknown User"}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500">
                               {record.user?.email || "-"}
                             </p>
                           </td>
                         )}
 
-                        <td className="px-5 py-4 text-sm text-gray-900 whitespace-nowrap">
+                        <td className="px-4 py-3 text-gray-900 whitespace-nowrap">
                           {formatDate(record.clockIn)}
                         </td>
 
-                        <td className="px-5 py-4 text-sm text-gray-900 whitespace-nowrap">
+                        <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
                           {formatDateTime(record.clockIn)}
                         </td>
 
-                        <td className="px-5 py-4 text-sm text-gray-900 whitespace-nowrap">
+                        <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
                           {formatDateTime(record.clockOut)}
                         </td>
 
-                        <td className="px-5 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                        <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
                           {getDuration(
                             record.clockIn,
                             record.clockOut,
@@ -301,11 +297,15 @@ export default function AttendancePage() {
                           )}
                         </td>
 
-                        <td className="px-5 py-4 text-sm font-medium whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           {record.clockOut ? (
-                            <span className="text-green-700">Completed</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700">
+                              Completed
+                            </span>
                           ) : (
-                            <span className="text-blue-700">In Progress</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                              In Progress
+                            </span>
                           )}
                         </td>
                       </tr>
@@ -315,11 +315,11 @@ export default function AttendancePage() {
               </div>
             )
           ) : (
-            <div className="px-5 py-8">
+            <div className="px-5 py-8 text-center">
               <p className="text-sm font-medium text-gray-900">
                 Access denied.
               </p>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 You do not have permission to view attendance records.
               </p>
             </div>

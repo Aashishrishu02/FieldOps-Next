@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useUser } from "../context/UserContext";
+import { Header } from "../components/Header";
 import { permissionLabels } from "@/lib/types";
 
 type RolePermission = {
@@ -169,51 +169,37 @@ export default function RolesPage() {
 
   return (
     <section className="min-w-0">
-      <header className="bg-white border-b border-gray-200">
-        <div className="px-5 sm:px-8 py-5 flex items-start gap-4">
-          <Link
-            href="/dashboard"
-            className="mt-1 text-sm text-gray-600 hover:text-gray-900 whitespace-nowrap"
-          >
-            ← Dashboard
-          </Link>
+      <Header
+        title="Role Management"
+        subtitle="Manage permissions assigned to roles."
+        backHref="/dashboard"
+      />
 
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Role Management
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Manage permissions assigned to roles.
-            </p>
-          </div>
-        </div>
-      </header>
-
-      <div className="px-5 sm:px-8 py-7">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         {error && (
-          <div className="mb-5 border border-red-200 bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">
+          <div className="border border-red-200 bg-red-50 text-red-700 rounded-lg px-4 py-3 text-xs sm:text-sm">
             {error}
           </div>
         )}
 
         {message && (
-          <div className="mb-5 border border-green-200 bg-green-50 text-green-700 rounded-lg px-4 py-3 text-sm">
+          <div className="border border-green-200 bg-green-50 text-green-700 rounded-lg px-4 py-3 text-xs sm:text-sm">
             {message}
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 border-b border-gray-200">
-              <h3 className="text-base font-semibold text-gray-900">Roles</h3>
-              <p className="text-sm text-gray-500 mt-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-900">Roles</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
                 Select a role to manage its permissions.
               </p>
             </div>
 
-            <div className="p-3">
+            <div className="p-2.5 sm:p-3 space-y-1">
               {roles.length === 0 ? (
-                <p className="px-3 py-4 text-sm text-gray-500">
+                <p className="px-3 py-4 text-xs sm:text-sm text-gray-500 text-center">
                   No roles found.
                 </p>
               ) : (
@@ -222,7 +208,7 @@ export default function RolesPage() {
                     type="button"
                     key={role.id}
                     onClick={() => handleRoleSelect(role)}
-                    className={`w-full text-left px-4 py-3 rounded-md text-sm mb-1 transition-colors ${
+                    className={`w-full text-left px-3.5 py-2.5 rounded-md text-xs sm:text-sm transition-colors ${
                       selectedRole?.id === role.id
                         ? "bg-gray-100 text-gray-900 font-medium"
                         : "text-gray-700 hover:bg-gray-50"
@@ -235,46 +221,46 @@ export default function RolesPage() {
             </div>
           </section>
 
-          <section className="lg:col-span-2 bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 border-b border-gray-200">
-              <h3 className="text-base font-semibold text-gray-900">
+          <section className="lg:col-span-2 bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-900">
                 {selectedRole
                   ? `${selectedRole.name} Permissions`
                   : "Permissions"}
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
                 Select the permissions for this role.
               </p>
             </div>
 
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {!selectedRole ? (
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Select a role from the left.
                 </p>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                     {allPermissions.map((permission) => {
                       const checked = selectedPermissions.includes(permission);
 
                       return (
                         <label
                           key={permission}
-                          className="flex items-start gap-3 border border-gray-200 rounded-md p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                          className="flex items-start gap-2.5 border border-gray-200 rounded-md p-3 cursor-pointer hover:bg-gray-50 transition-colors"
                         >
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => togglePermission(permission)}
-                            className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
 
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm font-medium text-gray-900">
                               {permissionLabels[permission] || permission}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 mt-0.5 break-all">
                               {permission}
                             </p>
                           </div>
@@ -283,12 +269,12 @@ export default function RolesPage() {
                     })}
                   </div>
 
-                  <div className="mt-6 pt-5 border-t border-gray-200 flex justify-end">
+                  <div className="mt-5 pt-4 border-t border-gray-100 flex justify-end">
                     <button
                       type="button"
                       onClick={handleSave}
                       disabled={saving}
-                      className="px-5 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                      className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md text-xs sm:text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                     >
                       {saving ? "Saving..." : "Save Permissions"}
                     </button>

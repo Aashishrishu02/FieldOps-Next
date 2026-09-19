@@ -24,11 +24,11 @@ export function MobileNav() {
 
   return (
     <div className="md:hidden border-b border-gray-200 bg-white sticky top-0 z-40">
-      <div className="flex items-center justify-between px-4 h-16">
+      <div className="flex items-center justify-between px-4 h-14">
         <Link
           href="/dashboard"
           onClick={() => setIsOpen(false)}
-          className="text-lg font-semibold text-gray-900"
+          className="text-base font-semibold text-gray-900 tracking-tight"
         >
           FieldOps
         </Link>
@@ -36,12 +36,21 @@ export function MobileNav() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={logout}
+            className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+          >
+            Logout
+          </button>
+
+          <button
+            type="button"
             onClick={() => setIsOpen((prev) => !prev)}
             aria-label="Toggle navigation menu"
-            className="p-2 text-gray-600 rounded-md hover:bg-gray-100 hover:text-gray-900"
+            aria-expanded={isOpen}
+            className="p-1.5 text-gray-600 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors"
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -67,7 +76,7 @@ export function MobileNav() {
       </div>
 
       {isOpen && (
-        <div className="border-t border-gray-200 px-4 pt-3 pb-5 bg-white space-y-3 shadow-md">
+        <div className="border-t border-gray-200 px-4 pt-3 pb-5 bg-white space-y-3 shadow-md max-h-[calc(100vh-3.5rem)] overflow-y-auto">
           <nav className="space-y-1">
             {visibleItems.map((item) => {
               const active = item.exact
@@ -79,7 +88,7 @@ export function MobileNav() {
                   key={item.path}
                   href={item.path}
                   onClick={() => setIsOpen(false)}
-                  className={`block px-3 py-2.5 rounded-md text-sm transition-colors ${
+                  className={`block px-3 py-2 rounded-md text-sm transition-colors ${
                     active
                       ? "bg-gray-100 text-gray-900 font-medium"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -96,8 +105,10 @@ export function MobileNav() {
               <p className="text-sm font-medium text-gray-900 truncate">
                 {user.name || "User"}
               </p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
-              <p className="text-xs text-gray-500">{user.role}</p>
+              <p className="text-xs text-gray-500 truncate mt-0.5">
+                {user.email}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">{user.role}</p>
             </div>
 
             <button
@@ -106,7 +117,7 @@ export function MobileNav() {
                 setIsOpen(false);
                 void logout();
               }}
-              className="w-full mt-3 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full mt-3 border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Logout
             </button>

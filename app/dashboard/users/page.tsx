@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useUser } from "../context/UserContext";
+import { Header } from "../components/Header";
 
 type CreateMode = "email" | "manual";
 
@@ -194,15 +195,15 @@ export default function UserManagementPage() {
 
   if (!canProvision) {
     return (
-      <div className="p-8 text-center">
-        <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-lg p-6 text-center">
-          <h1 className="text-xl font-semibold text-gray-900">Access Denied</h1>
-          <p className="text-sm text-gray-600 mt-2">
+      <div className="p-4 sm:p-8 text-center">
+        <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-lg p-6 text-center shadow-sm">
+          <h1 className="text-lg font-semibold text-gray-900">Access Denied</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-2">
             You do not have permission to manage users.
           </p>
           <Link
             href="/dashboard"
-            className="inline-block mt-5 px-4 py-2.5 rounded-md bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
+            className="inline-block mt-4 px-4 py-2 rounded-md bg-gray-900 text-white text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
           >
             Back to Dashboard
           </Link>
@@ -217,61 +218,37 @@ export default function UserManagementPage() {
 
   return (
     <section className="min-w-0">
-      <header className="bg-white border-b border-gray-200">
-        <div className="px-4 sm:px-6 lg:px-8 py-5">
-          <Link
-            href="/dashboard"
-            className="inline-block text-sm text-gray-500 hover:text-gray-900 mb-3"
-          >
-            ← Dashboard
-          </Link>
+      <Header
+        title="User Management"
+        subtitle="Create user accounts and provide access credentials."
+        backHref="/dashboard"
+      />
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                User Management
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Create user accounts and provide access credentials.
-              </p>
-            </div>
-
-            <div className="text-sm text-gray-500">
-              Logged in as{" "}
-              <span className="font-medium text-gray-900">
-                {currentUser.role}
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-6xl">
-        <section className="bg-white border border-gray-200 rounded-lg">
-          <div className="px-5 py-4 border-b border-gray-200">
-            <h3 className="text-base font-semibold text-gray-900">Create User</h3>
-            <p className="text-sm text-gray-500 mt-1">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+        <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-900">Create User</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
               Choose how credentials should be provided.
             </p>
           </div>
 
-          <div className="p-5">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
+          <div className="p-4 sm:p-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
               <button
                 type="button"
                 onClick={() => changeMode("email")}
-                className={`border rounded-md p-4 text-left transition-colors ${
+                className={`border rounded-md p-3.5 text-left transition-colors ${
                   mode === "email"
-                    ? "border-blue-600 bg-blue-50"
+                    ? "border-blue-600 bg-blue-50/60"
                     : "border-gray-200 hover:bg-gray-50"
                 }`}
               >
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-xs sm:text-sm font-semibold text-gray-900">
                   Send Credentials by Email
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Enter a real email address. A temporary password will be
-                  generated and sent using SMTP.
+                  Enter an email address to send temporary credentials via SMTP.
                 </p>
               </button>
 
@@ -279,29 +256,29 @@ export default function UserManagementPage() {
                 <button
                   type="button"
                   onClick={() => changeMode("manual")}
-                  className={`border rounded-md p-4 text-left transition-colors ${
+                  className={`border rounded-md p-3.5 text-left transition-colors ${
                     mode === "manual"
-                      ? "border-blue-600 bg-blue-50"
+                      ? "border-blue-600 bg-blue-50/60"
                       : "border-gray-200 hover:bg-gray-50"
                   }`}
                 >
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900">
                     Generate Credentials
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    System generates a login ID and temporary password for you to
-                    give directly to the user.
+                    System generates a login ID and temporary password to share
+                    directly.
                   </p>
                 </button>
               )}
             </div>
 
-            <form onSubmit={handleCreateUser}>
+            <form onSubmit={handleCreateUser} className="space-y-4">
               {mode === "email" && (
-                <div className="mb-4">
+                <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-900 mb-2"
+                    className="block text-xs sm:text-sm font-medium text-gray-900 mb-1"
                   >
                     Email Address
                   </label>
@@ -313,15 +290,15 @@ export default function UserManagementPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="user@example.com"
                     autoComplete="email"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 bg-white outline-none focus:border-blue-500"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 bg-white outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
 
-              <div className="mb-5">
+              <div>
                 <label
                   htmlFor="role"
-                  className="block text-sm font-medium text-gray-900 mb-2"
+                  className="block text-xs sm:text-sm font-medium text-gray-900 mb-1"
                 >
                   Role
                 </label>
@@ -330,7 +307,7 @@ export default function UserManagementPage() {
                   name="role"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 bg-white outline-none focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 bg-white outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select a role</option>
                   {availableRoles.map((roleName) => (
@@ -341,77 +318,69 @@ export default function UserManagementPage() {
                 </select>
               </div>
 
-              <div className="border border-gray-200 bg-gray-50 rounded-md p-4 mb-5">
+              <div className="border border-gray-200 bg-gray-50 rounded-md p-3 text-xs text-gray-600">
                 {mode === "email" ? (
-                  <>
-                    <p className="text-sm font-medium text-gray-900">
-                      Email delivery
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      A temporary password will be generated and sent to the
-                      provided email address.
-                    </p>
-                  </>
+                  <span>
+                    A temporary password will be generated and sent to the provided
+                    email address.
+                  </span>
                 ) : (
-                  <>
-                    <p className="text-sm font-medium text-gray-900">
-                      Manual credentials
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      A login ID and temporary password will be generated and shown
-                      below.
-                    </p>
-                  </>
+                  <span>
+                    A login ID and temporary password will be generated and shown
+                    below.
+                  </span>
                 )}
               </div>
 
               {error && (
-                <div className="mb-4 border border-red-200 bg-red-50 text-red-700 rounded-md px-4 py-3 text-sm">
+                <div className="border border-red-200 bg-red-50 text-red-700 rounded-md px-3.5 py-2.5 text-xs sm:text-sm">
                   {error}
                 </div>
               )}
 
               {message && (
-                <div className="mb-4 border border-green-200 bg-green-50 text-green-700 rounded-md px-4 py-3 text-sm">
+                <div className="border border-green-200 bg-green-50 text-green-700 rounded-md px-3.5 py-2.5 text-xs sm:text-sm">
                   {message}
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={creating}
-                className="w-full sm:w-auto px-5 py-2.5 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-              >
-                {creating
-                  ? "Creating..."
-                  : mode === "email"
-                  ? "Create & Send Credentials"
-                  : "Generate Credentials"}
-              </button>
+              <div>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-900 text-white rounded-md text-xs sm:text-sm font-medium hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                >
+                  {creating
+                    ? "Creating..."
+                    : mode === "email"
+                    ? "Create & Send Credentials"
+                    : "Generate Credentials"}
+                </button>
+              </div>
             </form>
 
             {credentials && (
-              <div className="mt-6 border border-gray-300 rounded-lg">
-                <div className="px-5 py-4 border-b border-gray-200">
-                  <h4 className="text-base font-semibold text-gray-900">
+              <div className="mt-5 border border-gray-200 rounded-lg overflow-hidden bg-gray-50/50">
+                <div className="px-4 py-3 border-b border-gray-200 bg-white">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-900">
                     Generated Credentials
-                  </h4>
-                  <p className="text-xs text-gray-500 mt-1">
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
                     Give these credentials directly to the user.
                   </p>
                 </div>
 
-                <div className="p-5 space-y-5">
+                <div className="p-4 space-y-3">
                   <div>
                     <p className="text-xs text-gray-500">Login Email</p>
-                    <p className="text-sm font-medium text-gray-900 mt-1 break-all">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 break-all font-mono">
                       {credentials.email}
                     </p>
                   </div>
 
                   <div>
                     <p className="text-xs text-gray-500">Temporary Password</p>
-                    <p className="text-sm font-medium text-gray-900 mt-1 break-all font-mono">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 break-all font-mono">
                       {credentials.temporaryPassword}
                     </p>
                   </div>
@@ -419,7 +388,7 @@ export default function UserManagementPage() {
                   <button
                     type="button"
                     onClick={copyCredentials}
-                    className="w-full sm:w-auto border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white bg-white transition-colors"
                   >
                     Copy Credentials
                   </button>
@@ -430,38 +399,42 @@ export default function UserManagementPage() {
         </section>
 
         {isSuperAdmin && (
-          <section className="bg-white border border-gray-200 rounded-lg mt-7">
-            <div className="px-5 py-4 border-b border-gray-200">
-              <h3 className="text-base font-semibold text-gray-900">
+          <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-900">
                 Existing Users
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
                 Accounts currently available in the system.
               </p>
             </div>
 
             {loadingUsers ? (
-              <div className="p-5 text-sm text-gray-500">Loading users...</div>
+              <div className="p-6 text-center text-xs sm:text-sm text-gray-500">
+                Loading users...
+              </div>
             ) : users.length === 0 ? (
-              <div className="p-5 text-sm text-gray-500">No users found.</div>
+              <div className="p-6 text-center text-xs sm:text-sm text-gray-500">
+                No users found.
+              </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px] text-sm">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[640px] text-xs sm:text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="text-left px-5 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 whitespace-nowrap">
                         Name
                       </th>
-                      <th className="text-left px-5 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 whitespace-nowrap">
                         Email / Login ID
                       </th>
-                      <th className="text-left px-5 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 whitespace-nowrap">
                         Role
                       </th>
-                      <th className="text-left px-5 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 whitespace-nowrap">
                         Password
                       </th>
-                      <th className="text-left px-5 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 whitespace-nowrap">
                         Action
                       </th>
                     </tr>
@@ -470,21 +443,27 @@ export default function UserManagementPage() {
                   <tbody className="divide-y divide-gray-100">
                     {users.map((item) => (
                       <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-5 py-4 text-gray-900">
+                        <td className="px-4 py-3 text-gray-900 whitespace-nowrap">
                           {item.name || "—"}
                         </td>
-                        <td className="px-5 py-4 text-gray-700">
-                          <div className="max-w-xs break-all">{item.email}</div>
+                        <td className="px-4 py-3 text-gray-700">
+                          <div className="max-w-xs truncate">{item.email}</div>
                         </td>
-                        <td className="px-5 py-4 text-gray-900">{item.role}</td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-3 text-gray-900 whitespace-nowrap">
+                          {item.role}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
                           {item.mustChangePassword ? (
-                            <span className="text-amber-700">Temporary</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700">
+                              Temporary
+                            </span>
                           ) : (
-                            <span className="text-green-700">Changed</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700">
+                              Changed
+                            </span>
                           )}
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           {item.id === currentUser.id ? (
                             <span className="text-xs text-gray-400">
                               Current account
@@ -493,7 +472,7 @@ export default function UserManagementPage() {
                             <button
                               type="button"
                               onClick={() => handleDeleteUser(item.id, item.email)}
-                              className="text-sm text-red-600 hover:text-red-800"
+                              className="text-xs sm:text-sm font-medium text-red-600 hover:text-red-800 transition-colors"
                             >
                               Delete
                             </button>
